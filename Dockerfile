@@ -1,11 +1,7 @@
-FROM debian:bullseye-slim
-
-# Install curl
-RUN apt-get update && apt-get install -y curl
+FROM registry.access.redhat.com/ubi10-micro:latest
 
 # Add the entry point
-ADD entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chmod=755 entrypoint.sh ./entrypoint.sh
 
 # Load the entry point
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
