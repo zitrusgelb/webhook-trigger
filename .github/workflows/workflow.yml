@@ -30,6 +30,12 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
 
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
+
       # -------------------------
       # Login to GitHub Container Registry
       # -------------------------
@@ -54,6 +60,7 @@ jobs:
           push: false
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHORT_SHA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -65,7 +72,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'image'
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHORT_SHA }}
           exit-code: 0
           severity: UNKNOWN,LOW,MEDIUM
           format: 'table'
@@ -90,7 +97,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'image'
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHORT_SHA }}
           exit-code: 1
           format: 'table'
           ignore-unfixed: true
@@ -120,6 +127,7 @@ jobs:
       - name: Push Docker images
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_SHORT_SHA }}
 
       - name: ntfy-success-notifications
         uses: niniyas/ntfy-action@master
